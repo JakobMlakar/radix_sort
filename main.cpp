@@ -50,3 +50,35 @@ void Izpis_Stevil(const vector<unsigned char>& polje) {
     
     output.close();
 }
+
+void CountingSort(vector<unsigned char>& A, int k) {
+    // Validate input parameters
+    if (k < 0 || k >= 8) {
+        cerr << "Error: Bit position must be between 0 and 7" << endl;
+        return;
+    }
+    
+    if (A.empty()) {
+        return; // Nothing to sort
+    }
+    
+    int n = A.size();
+    vector<unsigned char> B(n); // Output array
+    int C[2] = { 0 };  // Counter array for binary digits (0 or 1)
+    
+    // Count occurrences of each value at bit position k
+    for (int i = 0; i < n; i++) {
+        C[(A[i] >> k) & 1]++;
+    }
+    
+    // Calculate cumulative counts
+    C[1] += C[0];
+    
+    // Build the output array in a stable manner (working from end to maintain stability)
+    for (int i = n - 1; i >= 0; i--) {
+        B[--C[(A[i] >> k) & 1]] = A[i];
+    }
+    
+    // Copy back to the original array
+    swap(A, B);
+}
