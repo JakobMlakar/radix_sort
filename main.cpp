@@ -82,3 +82,21 @@ void CountingSort(vector<unsigned char>& A, int k) {
     // Copy back to the original array
     swap(A, B);
 }
+
+void RadixSort(vector<unsigned char>& A) {
+    // Check if array is empty
+    if (A.empty()) {
+        cout << "Warning: Empty array, nothing to sort" << endl;
+        return;
+    }
+    
+    cout << "Starting Radix Sort on " << A.size() << " elements..." << endl;
+    
+    // Sort by each bit from least significant (0) to most significant (7)
+    for (int k = 0; k < 8; k++) {
+        cout << "Processing bit position " << k << "..." << endl;
+        CountingSort(A, k);
+    }
+    
+    cout << "Radix Sort completed successfully" << endl;
+}
