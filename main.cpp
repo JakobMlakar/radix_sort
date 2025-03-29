@@ -82,3 +82,9 @@ void CountingSort(vector<unsigned char>& A, int k) {
     // Copy back to the original array
     swap(A, B);
 }
+
+void RadixSort(vector<unsigned char>& A) {
+    for (int k = 0; k < 8; k++) {
+        CountingSort(A, k);
+    }
+}
