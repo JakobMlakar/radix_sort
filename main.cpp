@@ -26,3 +26,10 @@ bool Branje_Stevil(vector<unsigned char>& vec, const char s[]) {
     input.close();
     return !vec.empty();
 }
+
+void Izpis_Stevil(const vector<unsigned char>& polje) {
+    ofstream output("out.txt");
+    for (size_t i = 0; i < polje.size(); i++) {
+        output << (int)polje[i] << ' ';
+    }
+}
