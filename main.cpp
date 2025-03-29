@@ -50,3 +50,17 @@ void Izpis_Stevil(const vector<unsigned char>& polje) {
     
     output.close();
 }
+
+void CountingSort(vector<unsigned char>& A, int k) {
+    int n = A.size();
+    vector<unsigned char> B(n);
+    int C[2] = { 0 };
+    for (int i = 0; i < n; i++) {
+        C[(A[i] >> k) & 1]++;
+    }
+    C[1] += C[0];
+    for (int i = n - 1; i >= 0; i--) {
+        B[--C[(A[i] >> k) & 1]] = A[i];
+    }
+    swap(A, B);
+}
