@@ -1,0 +1,81 @@
+name: Test C++ Application
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+   # Prvi posel (preveri če testi obstajajo)
+  check-tests:
+    name: Check for Tests
+    runs-on: self-hosted
+    outputs:
+      tests_exist: ${{ steps.check.outputs.tests_exist }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Check for test files
+        id: check
+        run: |
+          find . -name "*test*.cpp" -o -name "*Test*.cpp" 2> napaka.txt
+          
+          if find . -name "*test*.cpp" -o -name "*Test*.cpp" | grep -q .; then
+            echo "Tests found in the repository"
+            echo "tests_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "No tests found in the repository"
+            echo "tests_exist=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+      
+      - name: Upload error log as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: error-log
+          path: napaka.txt
+
+  # Drugi posel (zaženi teste)
+  run-tests:
+    name: Run Tests
+    needs: check-tests
+    runs-on: self-hosted
+    if: ${{ needs.check-tests.outputs.tests_exist == 'true' }}
+    
+    # Matrix
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Download error log
+        uses: actions/download-artifact@v3
+        with:
+          name: error-log
+          
+      - name: Check error log
+        run: |
+          echo "Content of napaka.txt:"
+          cat napaka.txt
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libgtest-dev
+      
+      - name: Configure and build
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          make
+      
+      - name: Run tests
+        working-directory: build
+        run: ctest --verbose
