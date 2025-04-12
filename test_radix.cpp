@@ -1,11 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <fstream>
-
-// Include or define the functions to test
-extern bool Branje_Stevil(std::vector<unsigned char>& vec, const char s[]);
-extern void CountingSort(std::vector<unsigned char>& A, int k);
-extern void RadixSort(std::vector<unsigned char>& A);
+#include "radix_sort_functions.h"
 
 // Test Branje_Stevil function
 TEST(RadixSortTest, ReadNumbersTest) {
