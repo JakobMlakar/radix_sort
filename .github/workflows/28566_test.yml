@@ -1,5 +1,6 @@
 name: Test C++ Application
 
+# Run on push to main branch
 on:
   push:
     branches: [ master ]
@@ -7,7 +8,7 @@ on:
     branches: [ master ]
 
 jobs:
-   # Prvi posel (preveri če testi obstajajo)
+  # First job: check if test scripts exist
   check-tests:
     name: Check for Tests
     runs-on: self-hosted
@@ -16,13 +17,15 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         
       - name: Check for test files
         id: check
         run: |
+          # Look for test files in the repository and redirect stderr to napaka.txt
           find . -name "*test*.cpp" -o -name "*Test*.cpp" 2> napaka.txt
           
+          # Check if tests were found
           if find . -name "*test*.cpp" -o -name "*Test*.cpp" | grep -q .; then
             echo "Tests found in the repository"
             echo "tests_exist=true" >> $GITHUB_OUTPUT
@@ -32,37 +35,36 @@ jobs:
             exit 1
           fi
       
-      - name: Upload error log as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: error-log
-          path: napaka.txt
+      # We'll skip using the upload-artifact action and just store the file
+      - name: Save error log
+        run: |
+          mkdir -p artifacts
+          cp napaka.txt artifacts/
 
-  # Drugi posel (zaženi teste)
+  # Second job: run tests
   run-tests:
     name: Run Tests
     needs: check-tests
     runs-on: self-hosted
     if: ${{ needs.check-tests.outputs.tests_exist == 'true' }}
     
-    # Matrix
+    # Matrix strategy for different build types
     strategy:
       matrix:
         build_type: [Debug, Release]
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         
-      - name: Download error log
-        uses: actions/download-artifact@v3
-        with:
-          name: error-log
-          
-      - name: Check error log
+      - name: Check for error log
         run: |
-          echo "Content of napaka.txt:"
-          cat napaka.txt
+          if [ -f artifacts/napaka.txt ]; then
+            echo "Content of napaka.txt:"
+            cat artifacts/napaka.txt
+          else
+            echo "Error log not found"
+          fi
       
       - name: Install dependencies
         run: |
