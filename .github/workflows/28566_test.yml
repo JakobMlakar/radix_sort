@@ -1,6 +1,5 @@
 name: Test C++ Application
 
-# Run on push to main branch
 on:
   push:
     branches: [ master ]
