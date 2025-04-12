@@ -2,9 +2,9 @@ name: Test C++ Application
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   # First job: check if test scripts exist
