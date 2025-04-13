@@ -1,11 +1,14 @@
 name: Test
+
+# Definira, kdaj se bo workflow izvajal
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
 jobs:
-  # First job: check if test scripts exist
+  # Prvo opravilo: preveri, če obstajajo testne datoteke
   check-tests:
     name: Check for Tests
     runs-on: self-hosted
@@ -19,37 +22,44 @@ jobs:
       - name: Check for test files
         id: check
         run: |
-          # Look for test files in the repository and redirect stderr to napaka.txt
-          find . -name "*test*.cpp" -o -name "*Test*.cpp" 2> napaka.txt
+          # Aktivno zapisovanje v datoteko napak
+          echo "=== Začetek preverjanja testnih datotek ob $(date) ===" > napaka.txt
+          echo "Izvajanje v direktoriju: $(pwd)" >> napaka.txt
           
-          # Check if tests were found
-          if find . -name "*test*.cpp" -o -name "*Test*.cpp" | grep -q .; then
+          # Iskanje testnih datotek in preverjanje rezultatov
+          test_files=$(find . -name "*test*.cpp" -o -name "*Test*.cpp" 2>> napaka.txt)
+          
+          if [ -n "$test_files" ]; then
+            echo "Najdene testne datoteke:" >> napaka.txt
+            echo "$test_files" >> napaka.txt
             echo "Tests found in the repository"
             echo "tests_exist=true" >> $GITHUB_OUTPUT
           else
+            echo "NAPAKA: V repozitoriju ni bilo najdenih testnih datotek!" >> napaka.txt
+            echo "To bo povzročilo neuspeh postopka, saj je testiranje obvezno." >> napaka.txt
+            echo "Prosimo, dodajte ustrezne testne datoteke." >> napaka.txt
             echo "No tests found in the repository"
             echo "tests_exist=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-  
-      # Namesto using actions/upload-artifact, preprosto prikaži vsebino
+      
       - name: Display error log
         run: |
-          echo "Contents of napaka.txt:"
+          echo "Vsebina datoteke napaka.txt:"
           cat napaka.txt
-          # Ustvarimo direktorij za shranjevanje datoteke
+          # Shranimo kopijo za drugi job
           mkdir -p /tmp/workflow-artifacts
           cp napaka.txt /tmp/workflow-artifacts/
         if: always()  # Ta korak se vedno izvede, tudi če prejšnji koraki ne uspejo
 
-  # Second job: run tests
+  # Drugo opravilo: izvajanje testov
   run-tests:
     name: Run Tests
     needs: check-tests
     runs-on: self-hosted
     if: ${{ needs.check-tests.outputs.tests_exist == 'true' }}
     
-    # Matrix strategy for different build types
+    # Matrica za testiranje v različnih konfiguracijah
     strategy:
       matrix:
         build_type: [Debug, Release]
@@ -58,13 +68,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         
-      - name: Check for error log
+      - name: Check error log
         run: |
           if [ -f /tmp/workflow-artifacts/napaka.txt ]; then
-            echo "Content of napaka.txt:"
+            echo "Vsebina datoteke napaka.txt iz prejšnjega opravila:"
             cat /tmp/workflow-artifacts/napaka.txt
           else
-            echo "Error log not found"
+            echo "Dnevnik napak ni bil najden"
           fi
       
       - name: Install dependencies
@@ -76,6 +86,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
+          # Uporaba matrice - vrednost build_type se nastavi glede na trenutno izvajanje
           cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           make
       
