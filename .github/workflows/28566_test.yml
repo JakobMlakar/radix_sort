@@ -33,12 +33,13 @@ jobs:
             echo "tests_exist=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-      
-      # We'll skip using the upload-artifact action and just store the file
+  
       - name: Save error log
-        run: |
-          mkdir -p artifacts
-          cp napaka.txt artifacts/
+        uses: actions/upload-artifact@v2
+        with:
+          name: error-logs
+          path: napaka.txt
+          retention-days: 7
 
   # Second job: run tests
   run-tests:
