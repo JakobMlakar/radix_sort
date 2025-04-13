@@ -1,11 +1,9 @@
 name: Test
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   # First job: check if test scripts exist
   check-tests:
@@ -34,12 +32,15 @@ jobs:
             exit 1
           fi
   
-      - name: Save error log
-        uses: actions/upload-artifact@v2
-        with:
-          name: error-logs
-          path: napaka.txt
-          retention-days: 7
+      # Namesto using actions/upload-artifact, preprosto prikaži vsebino
+      - name: Display error log
+        run: |
+          echo "Contents of napaka.txt:"
+          cat napaka.txt
+          # Ustvarimo direktorij za shranjevanje datoteke
+          mkdir -p /tmp/workflow-artifacts
+          cp napaka.txt /tmp/workflow-artifacts/
+        if: always()  # Ta korak se vedno izvede, tudi če prejšnji koraki ne uspejo
 
   # Second job: run tests
   run-tests:
@@ -59,9 +60,9 @@ jobs:
         
       - name: Check for error log
         run: |
-          if [ -f artifacts/napaka.txt ]; then
+          if [ -f /tmp/workflow-artifacts/napaka.txt ]; then
             echo "Content of napaka.txt:"
-            cat artifacts/napaka.txt
+            cat /tmp/workflow-artifacts/napaka.txt
           else
             echo "Error log not found"
           fi
